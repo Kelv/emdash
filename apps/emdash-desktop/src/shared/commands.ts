@@ -39,6 +39,14 @@ export const APP_COMMAND_DEFS = defineCommandDefs([
     iconKey: 'library',
   },
   {
+    id: 'app.grid',
+    label: 'Open Grid',
+    description: 'Open the global grid view',
+    scope: 'app',
+    group: 'App',
+    iconKey: 'layout-grid',
+  },
+  {
     id: 'app.newProject',
     label: 'New Project',
     description: 'Add a new local or SSH project',

@@ -1,8 +1,12 @@
+import { LayoutGrid } from 'lucide-react';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo, useRef } from 'react';
+import { getProjectStore, projectDisplayName } from '@renderer/features/projects/stores/project-selectors';
+import { getGridViewStore } from '@renderer/features/grid/stores/grid-store-registry';
 import { useAppSettingsKey } from '@renderer/features/settings/use-app-settings-key';
 import { usePaneContext } from '@renderer/features/tabs/pane-context';
 import { useIsActiveTask } from '@renderer/features/tasks/hooks/use-is-active-task';
+import { getRegisteredTaskData } from '@renderer/features/tasks/stores/task-selectors';
 import {
   useConversations,
   useTaskViewContext,
@@ -14,6 +18,7 @@ import { PaneSizingContextProvider } from '@renderer/lib/pty/pane-sizing-context
 import { PtyPane } from '@renderer/lib/pty/pty-pane';
 import { TerminalSearchOverlay } from '@renderer/lib/pty/terminal-search-overlay';
 import { useTerminalSearch } from '@renderer/lib/pty/use-terminal-search';
+import { Button } from '@renderer/lib/ui/button';
 import { ContextBar } from './context-bar';
 import type { ConversationTabResource } from './conversation-tab-resource';
 import {
@@ -102,9 +107,34 @@ export const ConversationsPanel = observer(function ConversationsPanel() {
 
   const onInterruptPress = activeConversation ? () => activeConversation.clearWorking() : undefined;
   const hideContextBarTrigger = interfaceSettings?.hideContextBar ?? false;
+  const projectName = projectDisplayName(getProjectStore(projectId)) ?? 'Project';
+  const taskName = getRegisteredTaskData(projectId, taskId)?.name ?? 'Task';
 
   return (
     <div className="flex h-full flex-col">
+      {activeConversation ? (
+        <div className="flex justify-end px-2 pt-2">
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label="Add conversation to grid"
+            className="text-foreground-muted hover:text-foreground"
+            onClick={() =>
+              getGridViewStore().addTile({
+                kind: 'conversation',
+                projectId,
+                taskId,
+                targetId: activeConversation.data.id,
+                projectName,
+                taskName,
+                targetName: activeConversation.data.title || 'Conversation',
+              })
+            }
+          >
+            <LayoutGrid className="size-3" />
+          </Button>
+        </div>
+      ) : null}
       <div className="flex min-h-0 flex-1">
         <div
           ref={containerRef}

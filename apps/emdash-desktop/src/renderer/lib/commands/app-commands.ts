@@ -1,4 +1,5 @@
 import { applyHistoryEntry } from '@renderer/lib/components/nav-buttons';
+import { openGridView } from '@renderer/features/grid/grid-navigation';
 import { toast } from '@renderer/lib/hooks/use-toast';
 import { toggleSettingsView } from '@renderer/lib/layout/settings-toggle';
 import { showModal } from '@renderer/lib/modal/modal-provider';
@@ -31,6 +32,7 @@ function createAppCommandProvider(): CommandProvider {
 
       const settingsDef = appDef('app.settings');
       const libraryDef = appDef('app.library');
+      const gridDef = appDef('app.grid');
       const newProjectDef = appDef('app.newProject');
       const giveFeedbackDef = appDef('app.giveFeedback');
       const toggleThemeDef = appDef('app.toggleTheme');
@@ -65,6 +67,15 @@ function createAppCommandProvider(): CommandProvider {
             }
 
             appState.navigation.navigate('library');
+          },
+        },
+        {
+          id: gridDef.id,
+          label: gridDef.label,
+          description: gridDef.description,
+          group: gridDef.group,
+          execute() {
+            openGridView();
           },
         },
         {

@@ -1,4 +1,4 @@
-import { Clock, FolderInput, Library, MessageSquareShare, Settings } from 'lucide-react';
+import { Clock, FolderInput, LayoutGrid, Library, MessageSquareShare, Settings } from 'lucide-react';
 import { observer } from 'mobx-react-lite';
 import React from 'react';
 import {
@@ -66,6 +66,17 @@ export const LeftSidebar: React.FC = observer(function LeftSidebar() {
         <SidebarFooter>
           <SidebarMenu>
             <SidebarSearchTrigger />
+            <SidebarMenuButton
+              isActive={isCurrentView(currentView, 'grid')}
+              onClick={() => navigate('grid')}
+              aria-label="Grid"
+              className="w-full justify-between"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <LayoutGrid className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" />
+                <span className="truncate">Grid</span>
+              </span>
+            </SidebarMenuButton>
             <SidebarMenuButton
               isActive={isCurrentView(currentView, 'automations')}
               onClick={() => navigate('automations')}
