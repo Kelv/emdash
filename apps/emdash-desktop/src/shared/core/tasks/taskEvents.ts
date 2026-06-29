@@ -8,6 +8,7 @@ export const taskStatusUpdatedChannel = defineEvent<{
   taskId: string;
   projectId: string;
   status: string;
+  statusChangedAt?: string;
 }>('task:status-updated');
 
 export const taskPrUpdatedChannel = defineEvent<{

@@ -157,12 +157,13 @@ export class TaskManagerStore {
 
     this._unsubStatusUpdated = events.on(
       taskStatusUpdatedChannel,
-      ({ taskId, projectId: evtProjectId, status }) => {
+      ({ taskId, projectId: evtProjectId, status, statusChangedAt }) => {
         if (evtProjectId !== this.projectId) return;
         const store = this.tasks.get(taskId);
-        if (store && isProvisioned(store)) {
+        if (store && isRegistered(store)) {
           runInAction(() => {
             store.data.status = status as TaskLifecycleStatus;
+            if (statusChangedAt) store.data.statusChangedAt = statusChangedAt;
           });
         }
       }

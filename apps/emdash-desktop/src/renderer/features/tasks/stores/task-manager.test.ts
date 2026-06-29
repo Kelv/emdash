@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   conversationAcquire: vi.fn(),
   conversationRelease: vi.fn(),
   draftComments: [] as MockDraftComments[],
+  eventsOn: vi.fn(() => () => {}),
   getConversationsForProject: vi.fn(),
   getProjectManagerStore: vi.fn(),
   getPullRequestsForTask: vi.fn(),
@@ -39,7 +40,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@renderer/lib/ipc', () => ({
   events: {
-    on: vi.fn(() => () => {}),
+    on: mocks.eventsOn,
   },
   rpc: {
     conversations: {
@@ -157,6 +158,7 @@ describe('TaskManagerStore archive lifecycle', () => {
     mocks.draftComments.length = 0;
     mocks.viewModels.length = 0;
     mocks.archiveTask.mockResolvedValue(undefined);
+    mocks.eventsOn.mockClear();
     mocks.getConversationsForProject.mockResolvedValue([]);
     mocks.getProjectManagerStore.mockReturnValue({ mountProject: mocks.mountProject });
     mocks.getPullRequestsForTask.mockResolvedValue({ success: true, data: { prs: [] } });
@@ -216,6 +218,31 @@ describe('TaskManagerStore archive lifecycle', () => {
     expect(store.viewModel).toBe(mocks.viewModels[1]);
     expect(mocks.viewModels[1].restoreSnapshot).toHaveBeenCalledWith(snapshot);
     expect(mocks.viewModels[1].initialize).toHaveBeenCalledOnce();
+
+    manager.dispose();
+  });
+
+  it('applies broadcast status timestamps to registered task stores', () => {
+    const manager = makeTaskManager();
+    const task = makeTask();
+    const store = createUnprovisionedTask(task);
+    manager.tasks.set(task.id, store);
+    const eventCalls = mocks.eventsOn.mock.calls as unknown as Array<
+      [{ name: string }, (payload: unknown) => void]
+    >;
+    const statusHandler = eventCalls.find(
+      ([channel]) => channel.name === 'task:status-updated'
+    )?.[1];
+
+    statusHandler?.({
+      taskId: 'task-1',
+      projectId: 'project-1',
+      status: 'review',
+      statusChangedAt: '2026-01-02T00:00:00.000Z',
+    });
+
+    expect(store.data.status).toBe('review');
+    expect(store.data.statusChangedAt).toBe('2026-01-02T00:00:00.000Z');
 
     manager.dispose();
   });
