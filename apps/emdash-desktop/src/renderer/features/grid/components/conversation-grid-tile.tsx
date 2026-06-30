@@ -20,7 +20,7 @@ export function ConversationGridTile({
 
   return (
     <TerminalPtyContent
-      className="h-full"
+      className="h-full min-h-0 overflow-auto"
       activeSession={resolved.session}
       allSessionIds={[resolved.session.sessionId]}
       autoFocus={false}

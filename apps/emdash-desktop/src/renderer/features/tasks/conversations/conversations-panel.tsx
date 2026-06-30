@@ -1,4 +1,4 @@
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, Plus } from 'lucide-react';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo, useRef } from 'react';
 import { getProjectStore, projectDisplayName } from '@renderer/features/projects/stores/project-selectors';
@@ -19,6 +19,7 @@ import { PtyPane } from '@renderer/lib/pty/pty-pane';
 import { TerminalSearchOverlay } from '@renderer/lib/pty/terminal-search-overlay';
 import { useTerminalSearch } from '@renderer/lib/pty/use-terminal-search';
 import { Button } from '@renderer/lib/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/lib/ui/tooltip';
 import { ContextBar } from './context-bar';
 import type { ConversationTabResource } from './conversation-tab-resource';
 import {
@@ -27,7 +28,7 @@ import {
 } from './pane-selectors';
 
 export const ConversationsPanel = observer(function ConversationsPanel() {
-  const { taskId } = useTaskViewContext();
+  const { projectId, taskId } = useTaskViewContext();
   const taskView = useWorkspaceViewModel();
   const conversations = useConversations();
   const workspace = useWorkspace();
@@ -114,25 +115,33 @@ export const ConversationsPanel = observer(function ConversationsPanel() {
     <div className="flex h-full flex-col">
       {activeConversation ? (
         <div className="flex justify-end px-2 pt-2">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            aria-label="Add conversation to grid"
-            className="text-foreground-muted hover:text-foreground"
-            onClick={() =>
-              getGridViewStore().addTile({
-                kind: 'conversation',
-                projectId,
-                taskId,
-                targetId: activeConversation.data.id,
-                projectName,
-                taskName,
-                targetName: activeConversation.data.title || 'Conversation',
-              })
-            }
-          >
-            <LayoutGrid className="size-3" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                aria-label="Add conversation to grid"
+                className="text-foreground-muted hover:text-foreground"
+                onClick={() =>
+                  getGridViewStore().addTile({
+                    kind: 'conversation',
+                    projectId,
+                    taskId,
+                    targetId: activeConversation.data.id,
+                    projectName,
+                    taskName,
+                    targetName: activeConversation.data.title || 'Conversation',
+                  })
+                }
+              >
+                <span className="relative block size-3.5">
+                  <LayoutGrid className="size-3.5" />
+                  <Plus className="absolute -right-1 -top-1 size-2.5 rounded-full bg-background-secondary-1" />
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add conversation to grid</TooltipContent>
+          </Tooltip>
         </div>
       ) : null}
       <div className="flex min-h-0 flex-1">

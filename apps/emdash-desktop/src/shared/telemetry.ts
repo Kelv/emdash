@@ -13,6 +13,7 @@ export type FocusView =
   | 'home'
   | 'project'
   | 'task'
+  | 'grid'
   | 'settings'
   | 'library'
   | 'skills'
@@ -57,6 +58,7 @@ export type TelemetryEventProperties = {
   home_viewed: { from_view: FocusView | null };
   project_viewed: { from_view: FocusView | null };
   task_viewed: { from_view: FocusView | null };
+  grid_viewed: { from_view: FocusView | null };
   settings_viewed: { from_view: FocusView | null };
   library_viewed: { from_view: FocusView | null };
   skills_viewed: { from_view: FocusView | null };

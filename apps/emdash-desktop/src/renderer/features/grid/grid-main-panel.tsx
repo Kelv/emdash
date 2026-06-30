@@ -69,7 +69,7 @@ export const GridMainPanel = observer(function GridMainPanel() {
             }}
           >
             <SortableContext items={tiles.map((tile) => tile.id)} strategy={rectSortingStrategy}>
-              <div className="grid auto-rows-[minmax(220px,220px)] grid-cols-2 gap-3">
+              <div className="grid auto-rows-[minmax(220px,220px)] grid-cols-2 gap-x-3 gap-y-6">
                 {tiles.map((tile) => {
                   const resolved = resolveGridTile(tile);
                   const body =

@@ -111,7 +111,7 @@ export function GridTile({
           </Tooltip>
         </div>
       </header>
-      <div className="min-h-0 flex-1">{body}</div>
+      <div className="min-h-0 flex-1 overflow-auto">{body}</div>
     </section>
   );
 }
