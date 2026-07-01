@@ -161,7 +161,7 @@ export const TerminalsPanel = observer(function TerminalsPanel() {
       <ResizablePanelGroup
         orientation="horizontal"
         id="terminal-drawer-inner"
-        className="h-full"
+        className="min-h-0 flex-1"
         onFocus={() => {
           setIsPanelFocused(true);
           taskView.setFocusedRegion('bottom');

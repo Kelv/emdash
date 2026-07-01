@@ -29,66 +29,79 @@ type Props = BaseModalProps<void>;
 export const GridAddItemModal = observer(function GridAddItemModal({ onSuccess, onClose }: Props) {
   const [items, setItems] = useState<GridAddItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hadLoadFailures, setHadLoadFailures] = useState(false);
 
   useEffect(() => {
     let disposed = false;
 
     void (async () => {
-      const projects = Array.from(getProjectManagerStore().projects.entries())
-        .map(([projectId, store]) => {
-          const mounted = asMounted(store);
-          if (!mounted) return null;
-          return {
-            projectId,
-            projectName: store.name,
-            tasks: Array.from(mounted.taskManager.tasks.values())
-              .filter((task) => task.state !== 'unregistered')
-              .map((task) => ({ taskId: task.data.id, taskName: task.data.name })),
-          };
-        })
-        .filter(Boolean) as Array<{
-        projectId: string;
-        projectName: string;
-        tasks: Array<{ taskId: string; taskName: string }>;
-      }>;
+      try {
+        const projects = Array.from(getProjectManagerStore().projects.entries())
+          .map(([projectId, store]) => {
+            const mounted = asMounted(store);
+            if (!mounted) return null;
+            return {
+              projectId,
+              projectName: store.name,
+              tasks: Array.from(mounted.taskManager.tasks.values())
+                .filter((task) => task.state !== 'unregistered')
+                .map((task) => ({ taskId: task.data.id, taskName: task.data.name })),
+            };
+          })
+          .filter(Boolean) as Array<{
+          projectId: string;
+          projectName: string;
+          tasks: Array<{ taskId: string; taskName: string }>;
+        }>;
 
-      const nextItems = (
-        await Promise.all(
-          projects.flatMap((project) =>
-            project.tasks.map(async (task) => {
-              const [conversations, terminals] = await Promise.all([
-                rpc.conversations.getConversationsForTask(project.projectId, task.taskId),
-                rpc.terminals.getTerminalsForTask(project.projectId, task.taskId),
-              ]);
+        let sawFailure = false;
+        const nextItems = (
+          await Promise.all(
+            projects.flatMap((project) =>
+              project.tasks.map(async (task) => {
+                try {
+                  const [conversations, terminals] = await Promise.all([
+                    rpc.conversations.getConversationsForTask(project.projectId, task.taskId),
+                    rpc.terminals.getTerminalsForTask(project.projectId, task.taskId),
+                  ]);
 
-              return [
-                ...conversations.map((conversation: Conversation) => ({
-                  kind: 'conversation' as const,
-                  projectId: project.projectId,
-                  projectName: project.projectName,
-                  taskId: task.taskId,
-                  taskName: task.taskName,
-                  targetId: conversation.id,
-                  targetName: conversation.title || 'Conversation',
-                })),
-                ...terminals.map((terminal: Terminal) => ({
-                  kind: 'terminal' as const,
-                  projectId: project.projectId,
-                  projectName: project.projectName,
-                  taskId: task.taskId,
-                  taskName: task.taskName,
-                  targetId: terminal.id,
-                  targetName: terminal.name,
-                })),
-              ];
-            })
+                  return [
+                    ...conversations.map((conversation: Conversation) => ({
+                      kind: 'conversation' as const,
+                      projectId: project.projectId,
+                      projectName: project.projectName,
+                      taskId: task.taskId,
+                      taskName: task.taskName,
+                      targetId: conversation.id,
+                      targetName: conversation.title || 'Conversation',
+                    })),
+                    ...terminals.map((terminal: Terminal) => ({
+                      kind: 'terminal' as const,
+                      projectId: project.projectId,
+                      projectName: project.projectName,
+                      taskId: task.taskId,
+                      taskName: task.taskName,
+                      targetId: terminal.id,
+                      targetName: terminal.name,
+                    })),
+                  ];
+                } catch {
+                  sawFailure = true;
+                  return [];
+                }
+              })
+            )
           )
-        )
-      ).flat();
+        ).flat();
 
-      if (disposed) return;
-      setItems(nextItems);
-      setIsLoading(false);
+        if (disposed) return;
+        setItems(nextItems);
+        setHadLoadFailures(sawFailure);
+      } finally {
+        if (!disposed) {
+          setIsLoading(false);
+        }
+      }
     })();
 
     return () => {
@@ -110,9 +123,23 @@ export const GridAddItemModal = observer(function GridAddItemModal({ onSuccess, 
         {isLoading ? (
           <p className="text-sm text-foreground-muted">Loading conversations and terminals…</p>
         ) : items.length === 0 ? (
-          <p className="text-sm text-foreground-muted">No active conversations or terminals found.</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-foreground-muted">
+              No active conversations or terminals found.
+            </p>
+            {hadLoadFailures ? (
+              <p className="text-xs text-foreground-tertiary-muted">
+                Some tasks could not be loaded and were skipped.
+              </p>
+            ) : null}
+          </div>
         ) : (
           <div className="flex flex-col gap-2">
+            {hadLoadFailures ? (
+              <p className="text-xs text-foreground-tertiary-muted">
+                Some tasks could not be loaded and were skipped.
+              </p>
+            ) : null}
             {items.map((item) => (
               <button
                 key={`${item.kind}:${item.taskId}:${item.targetId}`}
