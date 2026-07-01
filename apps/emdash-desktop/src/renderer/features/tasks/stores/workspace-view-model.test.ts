@@ -378,6 +378,21 @@ describe('WorkspaceViewModel terminal drawer snapshot', () => {
 
     viewModel.dispose();
   });
+
+  it('focuses the bottom region when selecting a terminal programmatically', () => {
+    const viewModel = makeProvisionedViewModel();
+
+    viewModel.focusTerminal('terminal-1');
+
+    expect(viewModel.isTerminalDrawerOpen).toBe(true);
+    expect(viewModel.focusedRegion).toBe('bottom');
+    expect(viewModel.terminalDrawerActiveItem).toEqual({
+      kind: 'terminal',
+      id: 'terminal-1',
+    });
+
+    viewModel.dispose();
+  });
 });
 
 describe('WorkspaceViewModel default conversation tab', () => {

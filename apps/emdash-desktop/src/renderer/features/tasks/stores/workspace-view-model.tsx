@@ -363,6 +363,17 @@ export class WorkspaceViewModel implements ILifecycle {
     this.terminalDrawerActiveItem = item;
   }
 
+  focusConversation(conversationId: string): void {
+    this.paneLayout.open('conversation', { conversationId }, { preview: false });
+    this.setFocusedRegion('main');
+  }
+
+  focusTerminal(terminalId: string): void {
+    this.setTerminalDrawerOpen(true);
+    this.terminalTabs.setActiveTab(terminalId);
+    this.terminalDrawerActiveItem = { kind: 'terminal', id: terminalId };
+  }
+
   /** Opens the terminal drawer and always creates a new terminal session. */
   async openNewTerminal(shell?: TerminalShellId): Promise<string | undefined> {
     this.isTerminalDrawerOpen = true;

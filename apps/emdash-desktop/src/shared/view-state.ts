@@ -125,6 +125,27 @@ export type NavigationSnapshot = {
 
 export type SidebarTaskSortBy = 'created-at' | 'updated-at';
 
+export type GridTileKind = 'conversation' | 'terminal';
+
+export type GridTileSizePreset = 'small' | 'wide' | 'large';
+
+export type GridTileSnapshot = {
+  id: string;
+  kind: GridTileKind;
+  projectId: string;
+  taskId: string;
+  targetId: string;
+  sizePreset: GridTileSizePreset;
+  order: number;
+  projectName: string;
+  taskName: string;
+  targetName: string;
+};
+
+export type GridViewSnapshot = {
+  tiles: GridTileSnapshot[];
+};
+
 /** Persisted sidebar UI state; fields may be absent in older DB blobs. */
 export type SidebarSnapshot = {
   expandedProjectIds?: string[];

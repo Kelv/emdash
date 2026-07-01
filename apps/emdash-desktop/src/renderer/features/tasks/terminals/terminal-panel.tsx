@@ -1,6 +1,8 @@
 import { Terminal } from 'lucide-react';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
+import { getProjectStore, projectDisplayName } from '@renderer/features/projects/stores/project-selectors';
+import { getGridViewStore } from '@renderer/features/grid/stores/grid-store-registry';
 import { useTabShortcuts } from '@renderer/features/tabs/hooks/useTabShortcuts';
 import {
   useTaskViewContext,
@@ -9,6 +11,7 @@ import {
   useWorkspaceId,
   useWorkspaceViewModel,
 } from '@renderer/features/tasks/task-view-context';
+import { getRegisteredTaskData } from '@renderer/features/tasks/stores/task-selectors';
 import {
   DEFAULT_TERMINAL_SHELL_AVAILABILITY,
   useTerminalShellAvailability,
@@ -55,6 +58,8 @@ export const TerminalsPanel = observer(function TerminalsPanel() {
   });
 
   const activeTerminalId = activeItem.kind === 'terminal' ? activeItem.id : undefined;
+  const projectName = projectDisplayName(getProjectStore(projectId)) ?? 'Project';
+  const taskName = getRegisteredTaskData(projectId, taskId)?.name ?? 'Task';
 
   const activeSession =
     activeItem.kind === 'terminal'
@@ -127,66 +132,98 @@ export const TerminalsPanel = observer(function TerminalsPanel() {
   );
 
   return (
-    <ResizablePanelGroup
-      orientation="horizontal"
-      id="terminal-drawer-inner"
-      className="h-full"
-      onFocus={() => {
-        setIsPanelFocused(true);
-        taskView.setFocusedRegion('bottom');
-      }}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-          setIsPanelFocused(false);
-        }
-      }}
-    >
-      <ResizablePanel id="terminal-drawer-pty" minSize="30%">
-        <TerminalPtyContent
-          className="h-full"
-          activeSession={activeSession}
-          allSessionIds={allSessionIds}
-          autoFocus={autoFocus}
-          emptyState={emptyState}
-          remoteConnectionId={remoteConnectionId}
-          workspaceId={workspaceId}
-        />
-      </ResizablePanel>
-      <ResizableHandle
-        onPointerDown={(e) => {
-          e.currentTarget.setPointerCapture(e.pointerId);
-          panelDragStore.setDragging(true);
+    <div className="flex h-full flex-col">
+      {activeTerminalId ? (
+        <div className="flex justify-end px-2 pt-2">
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label="Add terminal to grid"
+            className="text-foreground-muted hover:text-foreground"
+            onClick={() => {
+              const terminal = terminalMgr.terminals.get(activeTerminalId);
+              if (!terminal) return;
+              getGridViewStore().addTile({
+                kind: 'terminal',
+                projectId,
+                taskId,
+                targetId: terminal.data.id,
+                projectName,
+                taskName,
+                targetName: terminal.data.name,
+              });
+            }}
+          >
+            <Terminal className="size-3" />
+          </Button>
+        </div>
+      ) : null}
+      <ResizablePanelGroup
+        orientation="horizontal"
+        id="terminal-drawer-inner"
+        className="min-h-0 flex-1"
+        onFocus={() => {
+          setIsPanelFocused(true);
+          taskView.setFocusedRegion('bottom');
         }}
-        className="bg-transparent hover:bg-background-2"
-        onPointerUp={() => panelDragStore.setDragging(false)}
-        onPointerCancel={() => panelDragStore.setDragging(false)}
-      />
-      <ResizablePanel id="terminal-drawer-sidebar" defaultSize="25%" minSize="150px" maxSize="50%">
-        <TerminalDrawerSidebar
-          className="h-full"
-          projectId={projectId}
-          lifecycleScriptsMgr={lifecycleScriptsMgr}
-          activeScriptId={activeItem.kind === 'script' ? activeItem.id : undefined}
-          onSelectScript={(id) => {
-            lifecycleScriptsMgr?.setActiveTab(id);
-            taskView.setTerminalDrawerActiveItem({ kind: 'script', id });
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setIsPanelFocused(false);
+          }
+        }}
+      >
+        <ResizablePanel id="terminal-drawer-pty" minSize="30%">
+          <TerminalPtyContent
+            className="h-full"
+            activeSession={activeSession}
+            allSessionIds={allSessionIds}
+            autoFocus={autoFocus}
+            emptyState={emptyState}
+            remoteConnectionId={remoteConnectionId}
+            workspaceId={workspaceId}
+          />
+        </ResizablePanel>
+        <ResizableHandle
+          onPointerDown={(e) => {
+            e.currentTarget.setPointerCapture(e.pointerId);
+            panelDragStore.setDragging(true);
           }}
-          onRunScript={handleRunScript}
-          onStopScript={handleStopScript}
-          terminalTabView={terminalTabView}
-          activeTerminalId={activeTerminalId}
-          shellAvailability={shellAvailability}
-          onShellMenuOpen={() => setShouldLoadShellAvailability(true)}
-          onSelectTerminal={(id) => {
-            terminalTabView.setActiveTab(id);
-            taskView.setTerminalDrawerActiveItem({ kind: 'terminal', id });
-          }}
-          onAddTerminal={(shell) => void handleCreate(shell)}
-          onRemoveTerminal={(id) => terminalTabView.removeTab(id)}
-          onRenameTerminal={(id, name) => void terminalMgr?.renameTerminal(id, name)}
-          onHoverTerminal={handleHoverTerminal}
+          className="bg-transparent hover:bg-background-2"
+          onPointerUp={() => panelDragStore.setDragging(false)}
+          onPointerCancel={() => panelDragStore.setDragging(false)}
         />
-      </ResizablePanel>
-    </ResizablePanelGroup>
+        <ResizablePanel
+          id="terminal-drawer-sidebar"
+          defaultSize="25%"
+          minSize="150px"
+          maxSize="50%"
+        >
+          <TerminalDrawerSidebar
+            className="h-full"
+            projectId={projectId}
+            lifecycleScriptsMgr={lifecycleScriptsMgr}
+            activeScriptId={activeItem.kind === 'script' ? activeItem.id : undefined}
+            onSelectScript={(id) => {
+              lifecycleScriptsMgr?.setActiveTab(id);
+              taskView.setTerminalDrawerActiveItem({ kind: 'script', id });
+            }}
+            onRunScript={handleRunScript}
+            onStopScript={handleStopScript}
+            terminalTabView={terminalTabView}
+            activeTerminalId={activeTerminalId}
+            shellAvailability={shellAvailability}
+            onShellMenuOpen={() => setShouldLoadShellAvailability(true)}
+            onSelectTerminal={(id) => {
+              terminalTabView.setActiveTab(id);
+              taskView.setTerminalDrawerActiveItem({ kind: 'terminal', id });
+            }}
+            onAddTerminal={(shell) => void handleCreate(shell)}
+            onRemoveTerminal={(id) => terminalTabView.removeTab(id)}
+            onRenameTerminal={(id, name) => void terminalMgr?.renameTerminal(id, name)}
+            onHoverTerminal={handleHoverTerminal}
+          />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
   );
 });

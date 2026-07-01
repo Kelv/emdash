@@ -5,6 +5,7 @@ import { McpModal } from '@renderer/features/mcp/components/McpModal';
 import { AddProjectModal } from '@renderer/features/projects/components/add-project-modal/add-project-modal';
 import { ProjectConfigImportModal } from '@renderer/features/projects/components/settings-view/project-config-import-modal';
 import { ShareProjectConfigModal } from '@renderer/features/projects/components/settings-view/share-project-config-modal';
+import { GridAddItemModal } from '@renderer/features/grid/components/grid-add-item-modal';
 import { GithubConnectModal } from '@renderer/features/settings/components/github-connect-modal';
 import { CreateSkillModal } from '@renderer/features/skills/components/CreateSkillModal';
 import { AddRemoteModal } from '@renderer/features/tasks/add-remote-modal';
@@ -52,6 +53,7 @@ export const modalRegistry = {
   createConversationModal: createModal(CreateConversationModal),
   feedbackModal: createModal(FeedbackModal),
   promptModal: createModal(PromptModal, { size: 'lg' }),
+  gridAddItemModal: createModal(GridAddItemModal, { size: 'md' }),
   mcpServerModal: createModal(McpModal),
   createSkillModal: createModal(CreateSkillModal),
   conflictDialog: createModal(ConflictDialog, { size: 'sm' }),
